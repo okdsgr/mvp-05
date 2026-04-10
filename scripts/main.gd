@@ -62,20 +62,20 @@ _show_title()
 
 func _process(delta: float) -> void:
 if _phase == Phase.PLAYER_INPUT and is_instance_valid(_cpu_lbl_node):
-	_descent_timer += delta
-	var progress := _descent_timer / DESCENT_TIME
-	progress = clampf(progress, 0.0, 1.0)
-	_descent_y = -60.0 + (WIN_H + 60.0) * progress
-	_cpu_lbl_node.position.y = _descent_y
+_descent_timer += delta
+var progress := _descent_timer / DESCENT_TIME
+progress = clampf(progress, 0.0, 1.0)
+_descent_y = -60.0 + (WIN_H + 60.0) * progress
+_cpu_lbl_node.position.y = _descent_y
 
-	# タイムゲージ更新
-	var bar := _ui.get_node_or_null("TimeBar")
-	if bar and bar is ProgressBar:
-		(bar as ProgressBar).value = 1.0 - progress
+# タイムゲージ更新
+var bar := _ui.get_node_or_null("TimeBar")
+if bar and bar is ProgressBar:
+	(bar as ProgressBar).value = 1.0 - progress
 
-	# 時間切れ → プレイヤーの負け
-	if progress >= 1.0:
-		_on_time_up()
+# 時間切れ → プレイヤーの負け
+if progress >= 1.0:
+	_on_time_up()
 
 # =====================================================================
 # TITLE
@@ -146,21 +146,21 @@ status.custom_minimum_size = Vector2(WIN_W, 0)
 _ui.add_child(status)
 
 if player_won_entity.is_empty():
-	# 第1ラウンド：ランダム
-	var pick : Array = FIRST_ENTITIES[randi() % FIRST_ENTITIES.size()]
-	_cpu_entity    = pick[0]
-	_cpu_entity_ja = pick[1]
-	await get_tree().create_timer(1.2).timeout
-	_start_player_input_phase()
+# 第1ラウンド：ランダム
+var pick : Array = FIRST_ENTITIES[randi() % FIRST_ENTITIES.size()]
+_cpu_entity    = pick[0]
+_cpu_entity_ja = pick[1]
+await get_tree().create_timer(1.2).timeout
+_start_player_input_phase()
 else:
-	# CPUがカウンターを生成
-	_call_cpu_counter(player_won_entity)
+# CPUがカウンターを生成
+_call_cpu_counter(player_won_entity)
 
 func _call_cpu_counter(winner: String) -> void:
 var body := JSON.stringify({"winner": winner})
 var headers : PackedStringArray = ["Content-Type: application/json"]
 if _http_counter.request_completed.is_connected(_on_counter_response):
-	_http_counter.request_completed.disconnect(_on_counter_response)
+_http_counter.request_completed.disconnect(_on_counter_response)
 _http_counter.request_completed.connect(_on_counter_response, CONNECT_ONE_SHOT)
 _http_counter.request(N8N + "cpu-counter", headers, HTTPClient.METHOD_POST, body)
 
@@ -169,13 +169,13 @@ var text := body.get_string_from_utf8()
 custom_print(["[Counter] code=", code, " body=", text.substr(0, 100]))
 var json = JSON.parse_string(text)
 if json and json.has("entity"):
-	_cpu_entity    = str(json["entity"])
-	_cpu_entity_ja = str(json.get("entity_ja", _cpu_entity))
+_cpu_entity    = str(json["entity"])
+_cpu_entity_ja = str(json.get("entity_ja", _cpu_entity))
 else:
-	# フォールバック
-	var pick : Array = FIRST_ENTITIES[randi() % FIRST_ENTITIES.size()]
-	_cpu_entity    = pick[0]
-	_cpu_entity_ja = pick[1]
+# フォールバック
+var pick : Array = FIRST_ENTITIES[randi() % FIRST_ENTITIES.size()]
+_cpu_entity    = pick[0]
+_cpu_entity_ja = pick[1]
 _start_player_input_phase()
 
 # =====================================================================
@@ -252,22 +252,22 @@ input.text_submitted.connect(cb)
 
 func _on_player_submit() -> void:
 if _phase != Phase.PLAYER_INPUT:
-	return
+return
 var input_node := _ui.get_node_or_null("PlayerInput")
 if input_node == null:
-	return
+return
 var text : String = (input_node as LineEdit).text.strip_edges()
 if text.is_empty():
-	return
+return
 _player_entity = text
 _call_battle_judge()
 
 func _on_time_up() -> void:
 _cpu_score += 1
 _show_battle_scene("TIME UP…", [
-	"時間切れ！",
-	"%s が降りてきてしまった…" % _cpu_entity_ja,
-	"CPUの勝利！",
+"時間切れ！",
+"%s が降りてきてしまった…" % _cpu_entity_ja,
+"CPUの勝利！",
 ], false)
 
 # =====================================================================
@@ -279,15 +279,15 @@ _phase = Phase.WAITING_JUDGE
 # 入力欄・ボタンを無効化
 var btn := _ui.get_node_or_null("SubmitBtn")
 if btn and btn is Button:
-	(btn as Button).disabled = true
+(btn as Button).disabled = true
 var inp := _ui.get_node_or_null("PlayerInput")
 if inp and inp is LineEdit:
-	(inp as LineEdit).editable = false
+(inp as LineEdit).editable = false
 
 var body := JSON.stringify({"player": _player_entity, "cpu": _cpu_entity})
 var headers : PackedStringArray = ["Content-Type: application/json"]
 if _http_judge.request_completed.is_connected(_on_judge_response):
-	_http_judge.request_completed.disconnect(_on_judge_response)
+_http_judge.request_completed.disconnect(_on_judge_response)
 _http_judge.request_completed.connect(_on_judge_response, CONNECT_ONE_SHOT)
 _http_judge.request(N8N + "battle-judge", headers, HTTPClient.METHOD_POST, body)
 
@@ -297,23 +297,23 @@ custom_print(["[Judge] code=", code, " body=", text.substr(0, 200]))
 var json = JSON.parse_string(text)
 
 if json == null or not json.has("winner"):
-	_show_battle_scene("エラー", ["判定に失敗しました。もう一度お試しください。"], false)
-	return
+_show_battle_scene("エラー", ["判定に失敗しました。もう一度お試しください。"], false)
+return
 
 var player_wins : bool = str(json["winner"]) == "player"
 var reason      : String = str(json.get("reason", ""))
 var scene       : Array  = []
 if json.has("scene") and json["scene"] is Array:
-	scene = json["scene"]
+scene = json["scene"]
 else:
-	scene = [reason]
+scene = [reason]
 
 if player_wins:
-	_player_score += 1
-	_show_battle_scene("YOU WIN！", scene, true)
+_player_score += 1
+_show_battle_scene("YOU WIN！", scene, true)
 else:
-	_cpu_score += 1
-	_show_battle_scene("CPU WIN…", scene, false)
+_cpu_score += 1
+_show_battle_scene("CPU WIN…", scene, false)
 
 # =====================================================================
 # BATTLE SCENE
@@ -355,21 +355,21 @@ _ui.add_child(match_lbl)
 # 演出テキスト（順番に表示）
 var y := 210.0
 for i : int in scene_lines.size():
-	var line_lbl := Label.new()
-	line_lbl.text = str(scene_lines[i])
-	line_lbl.add_theme_font_size_override("font_size", 18)
-	line_lbl.add_theme_color_override("font_color", Color(0.88, 0.92, 1.0))
-	line_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD
-	line_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	line_lbl.custom_minimum_size = Vector2(WIN_W - 40, 0)
-	line_lbl.position = Vector2(20, y)
-	line_lbl.modulate.a = 0.0
-	_ui.add_child(line_lbl)
+var line_lbl := Label.new()
+line_lbl.text = str(scene_lines[i])
+line_lbl.add_theme_font_size_override("font_size", 18)
+line_lbl.add_theme_color_override("font_color", Color(0.88, 0.92, 1.0))
+line_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD
+line_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+line_lbl.custom_minimum_size = Vector2(WIN_W - 40, 0)
+line_lbl.position = Vector2(20, y)
+line_lbl.modulate.a = 0.0
+_ui.add_child(line_lbl)
 
-	var tw := create_tween()
-	tw.tween_interval(float(i) * 0.8)
-	tw.tween_property(line_lbl, "modulate:a", 1.0, 0.4)
-	y += 70.0
+var tw := create_tween()
+tw.tween_interval(float(i) * 0.8)
+tw.tween_property(line_lbl, "modulate:a", 1.0, 0.4)
+y += 70.0
 
 # 次へボタン（演出後に表示）
 var next_btn := Button.new()
@@ -386,11 +386,11 @@ tw2.tween_interval(wait_time)
 tw2.tween_property(next_btn, "modulate:a", 1.0, 0.3)
 
 if player_wins:
-	next_btn.pressed.connect(func(): _next_cpu_turn(_player_entity))
+next_btn.pressed.connect(func(): _next_cpu_turn(_player_entity))
 else:
-	next_btn.pressed.connect(func(): _next_cpu_turn(""))
+next_btn.pressed.connect(func(): _next_cpu_turn(""))
 
 func _clear_ui() -> void:
 for c : Node in _ui.get_children():
-	c.queue_free()
+c.queue_free()
 _cpu_lbl_node = null
