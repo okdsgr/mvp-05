@@ -166,7 +166,7 @@ func _call_cpu_counter(winner: String) -> void:
 
 func _on_counter_response(_r: int, code: int, _h: PackedStringArray, body: PackedByteArray) -> void:
 	var text := body.get_string_from_utf8()
-	custom_print(["[Counter] code=", code, " body=", text.substr(0, 100)])
+	print(["[Counter] code=", code, " body=", text.substr(0, 100)])
 	var json = JSON.parse_string(text)
 	if json and json.has("entity"):
 		_cpu_entity    = str(json["entity"])
@@ -293,7 +293,7 @@ func _call_battle_judge() -> void:
 
 func _on_judge_response(_r: int, code: int, _h: PackedStringArray, body: PackedByteArray) -> void:
 	var text := body.get_string_from_utf8()
-	custom_print(["[Judge] code=", code, " body=", text.substr(0, 200)])
+	print(["[Judge] code=", code, " body=", text.substr(0, 200)])
 	var json = JSON.parse_string(text)
 
 	if json == null or not json.has("winner"):
